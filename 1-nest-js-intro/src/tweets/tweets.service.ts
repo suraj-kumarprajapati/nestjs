@@ -13,13 +13,6 @@ export class TweetsService {
   ];
 
   getTweetsByUserId(userId: number) {
-    const user = this.usersService.getUser(userId);
-    if (!user) {
-      return `User with ID ${userId} not found.`;
-    }
-
-    const tweets = this.tweets.filter((tweet) => tweet.userId === userId);
-    const response = tweets.map((t) => ({ ...t, user: user }));
-    return response;
+   return "";
   }
 }

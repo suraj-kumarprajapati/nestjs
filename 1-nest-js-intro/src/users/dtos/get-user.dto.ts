@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { IsInt, IsOptional } from 'class-validator';
 
 export class GetUserDto {
@@ -12,9 +12,4 @@ export class GetUserDto {
   @IsInt({ message: 'Page must be an integer' })
   page: number = 1;
 
-  @IsOptional()
-  @Transform(({ value }) =>
-    value !== undefined ? value === 'true' : undefined,
-  )
-  isMarried?: boolean;
 }

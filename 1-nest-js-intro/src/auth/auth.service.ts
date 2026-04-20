@@ -11,19 +11,7 @@ export class AuthService {
   ) {}
 
   login(email: string, password: string) {
-    const user = this.usersService.getUserByEmail(email);
-
-    console.log(user);
-
-    if (!user) {
-      return 'User not found';
-    }
-    if (user.password === password) {
-      this.isAuthenticated = true;
-      return 'Login successful';
-    } else {
-      return 'Invalid credentials';
-    }
+    return "";
   }
 
   getIsAuthenticated(): boolean {

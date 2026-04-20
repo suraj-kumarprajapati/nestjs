@@ -1,3 +1,4 @@
+import { BaseEntity } from 'src/common/entities/base.entity';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum Gender {
@@ -7,7 +8,7 @@ export enum Gender {
 }
 
 @Entity()
-export class User {
+export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -27,6 +28,6 @@ export class User {
   @Column({ unique: true, nullable: false, type: 'varchar' })
   email!: string;
 
-  @Column({ nullable: false, type: 'varchar', length: 100 })
+  @Column({ nullable: false, type: 'varchar', length: 100, select: false })
   password!: string;
 }
