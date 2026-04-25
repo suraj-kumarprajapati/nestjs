@@ -15,10 +15,18 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  public async getUsers(limit: number, page: number): Promise<User[]> {
-    const users: User[] = await this.userRepository.find({
-      skip: (page - 1) * limit,
-      take: limit,
+  public async getUsers(): Promise<User[]> {
+    // for eager loading
+    // const users: User[] = await this.userRepository.find({
+    //   relations: {
+    //     profile: true,
+    //   },
+    // });
+
+    const users = await this.userRepository.find({
+      relations: {
+        profile: true,
+      },
     });
     return users;
   }
@@ -33,10 +41,17 @@ export class UsersService {
       return 'User with this email already exists';
     }
 
-    // this will only create a new user instance, but will not save it to the database
-    const newUser: User = this.userRepository.create(createUserDto);
-    // this will save the new user to the database and return the saved user instance
-    const newSavedUser: User = await this.userRepository.save(newUser);
+    // first create the profile even if it is optional, because we need to save the profile to the database before we can save the user
+    if (!createUserDto.profile) {
+      createUserDto.profile = {};
+    }
+
+    const newUser: User = this.userRepository.create(createUserDto); // create a new user instance from the DTO
+    const newSavedUser: User = await this.userRepository.save(newUser); // save the new user to the database
     return newSavedUser;
+  }
+
+  public async deleteUser(id: number) {
+    return await this.userRepository.delete({ id });
   }
 }

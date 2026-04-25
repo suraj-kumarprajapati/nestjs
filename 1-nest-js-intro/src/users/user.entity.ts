@@ -1,33 +1,45 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-
-export enum Gender {
-  MALE = 'male',
-  FEMALE = 'female',
-  OTHER = 'other',
-}
+import { Profile } from 'src/profile/profile.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ type: 'varchar', nullable: false, length: 50 })
-  firstName!: string;
-
-  @Column({ type: 'varchar', nullable: false, length: 50 })
-  lastName!: string;
+  @Column({
+    unique: true,
+    nullable: false,
+    type: 'varchar',
+    length: 25,
+  })
+  username!: string;
 
   @Column({
-    type: 'enum',
-    enum: Gender,
-    nullable: true,
+    unique: true,
+    nullable: false,
+    type: 'varchar',
   })
-  gender?: Gender;
-
-  @Column({ unique: true, nullable: false, type: 'varchar' })
   email!: string;
 
-  @Column({ nullable: false, type: 'varchar', length: 100, select: false })
+  @Column({
+    nullable: false,
+    type: 'varchar',
+    length: 100,
+    select: false,
+  })
   password!: string;
+
+  @OneToOne(() => Profile, (profile) => profile.user, {
+    cascade: true,
+    // eager: true, // for eager loading
+  })
+  @JoinColumn()
+  profile?: Profile;
 }

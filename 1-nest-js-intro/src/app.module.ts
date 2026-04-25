@@ -6,19 +6,23 @@ import { TweetsModule } from './tweets/tweets.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/user.entity';
+import { ProfileModule } from './profile/profile.module';
+import { Profile } from './profile/profile.entity';
 
 @Module({
   imports: [
     UsersModule,
     TweetsModule,
     AuthModule,
+    ProfileModule,
     // async configuration for TypeORM
     TypeOrmModule.forRootAsync({
       imports: [],
       inject: [],
       useFactory: () => ({
         type: 'postgres',
-        entities: [User],
+        // entities: [User, Profile],
+        autoLoadEntities: true,
         synchronize: true, // set to false in production
         host: 'localhost',
         port: 5432,
