@@ -1,7 +1,13 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Gender } from 'src/common/enums/gender.enum';
 import { User } from 'src/users/user.entity';
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Profile extends BaseEntity {
@@ -48,6 +54,9 @@ export class Profile extends BaseEntity {
   })
   profileImage?: string;
 
-  @OneToOne(() => User, (user) => user.profile)
+  @OneToOne(() => User, (user) => user.profile, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
   user!: User;
 }

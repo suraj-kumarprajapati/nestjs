@@ -54,4 +54,13 @@ export class UsersService {
   public async deleteUser(id: number) {
     return await this.userRepository.delete({ id });
   }
+
+  public async getUserById(id: number) {
+    return await this.userRepository.findOne({
+      where: { id: id },
+      // relations: {
+      //   profile: true,
+      // },
+    });
+  }
 }

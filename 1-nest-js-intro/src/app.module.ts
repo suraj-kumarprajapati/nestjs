@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
-import { TweetsModule } from './tweets/tweets.module';
+import { TweetsModule } from './tweets/tweet.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users/user.entity';
 import { ProfileModule } from './profile/profile.module';
 import { Profile } from './profile/profile.entity';
+import { HashTagModule } from './hashtag/hashtag.module';
 
 @Module({
   imports: [
@@ -15,14 +16,15 @@ import { Profile } from './profile/profile.entity';
     TweetsModule,
     AuthModule,
     ProfileModule,
+    HashTagModule,
     // async configuration for TypeORM
     TypeOrmModule.forRootAsync({
       imports: [],
       inject: [],
       useFactory: () => ({
         type: 'postgres',
-        // entities: [User, Profile],
-        autoLoadEntities: true,
+        // entities: [User, Profile, Tweet, HashTag, Auth],
+        autoLoadEntities: true, // automatically load entities from modules
         synchronize: true, // set to false in production
         host: 'localhost',
         port: 5432,

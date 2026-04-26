@@ -1,9 +1,11 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Profile } from 'src/profile/profile.entity';
+import { Tweet } from 'src/tweets/tweet.entity';
 import {
   Column,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -40,6 +42,9 @@ export class User extends BaseEntity {
     cascade: true,
     // eager: true, // for eager loading
   })
-  @JoinColumn()
+  // @JoinColumn()
   profile?: Profile;
+
+  @OneToMany(() => Tweet, (tweet) => tweet.user)
+  tweets?: Tweet[];
 }
