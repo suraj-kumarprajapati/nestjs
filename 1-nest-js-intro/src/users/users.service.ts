@@ -4,6 +4,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { User } from './user.entity';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
@@ -13,6 +14,8 @@ export class UsersService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    private readonly configService: ConfigService,
   ) {}
 
   public async getUsers(): Promise<User[]> {
@@ -22,6 +25,9 @@ export class UsersService {
     //     profile: true,
     //   },
     // });
+
+    const envType: string = this.configService.get<string>('ENV_TYPE') ?? '';
+    console.log('Current environment type:', envType);
 
     const users = await this.userRepository.find({
       relations: {

@@ -25,4 +25,16 @@ export class HashTagService {
       },
     });
   }
+
+  public async deleteHashTag(id: number) {
+    return await this.hashTagRepository.delete({ id: id });
+  }
+
+  public async softDeleteHashTag(id: number) {
+    return await this.hashTagRepository.softDelete({ id: id });
+  }
+
+  public async getHashAllTags() {
+    return await this.hashTagRepository.find();
+  }
 }

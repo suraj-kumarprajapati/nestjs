@@ -30,7 +30,7 @@ export class Tweet extends BaseEntity {
   @ManyToOne(() => User, (user) => user.tweets)
   user!: User;
 
-  @ManyToMany(() => HashTag)
+  @ManyToMany(() => HashTag, (hashTag) => hashTag.tweets)
   @JoinTable()
   hashTags?: HashTag[];
 }
