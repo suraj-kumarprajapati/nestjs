@@ -1,10 +1,19 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+  RequestTimeoutException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from 'src/auth/auth.service';
 import { User } from './user.entity';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { ResourceAlreadyExistsException } from 'src/exceptions/resource-already-exists.exception';
 
 @Injectable()
 export class UsersService {
@@ -19,13 +28,6 @@ export class UsersService {
   ) {}
 
   public async getUsers(): Promise<User[]> {
-    // for eager loading
-    // const users: User[] = await this.userRepository.find({
-    //   relations: {
-    //     profile: true,
-    //   },
-    // });
-
     const envType: string = this.configService.get<string>('ENV_TYPE') ?? '';
     console.log('Current environment type:', envType);
 
@@ -44,7 +46,24 @@ export class UsersService {
     });
 
     if (existingUser) {
-      return 'User with this email already exists';
+      throw new ResourceAlreadyExistsException(
+        'User',
+        'email',
+        createUserDto.email,
+      );
+    }
+
+    // find user by username
+    const existingUserByUsername = await this.userRepository.findOne({
+      where: { username: createUserDto?.username ?? '' },
+    });
+
+    if (existingUserByUsername) {
+      throw new ResourceAlreadyExistsException(
+        'User',
+        'username',
+        createUserDto.username,
+      );
     }
 
     // first create the profile even if it is optional, because we need to save the profile to the database before we can save the user
@@ -58,15 +77,27 @@ export class UsersService {
   }
 
   public async deleteUser(id: number) {
+    const user = await this.userRepository.findOne({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException(`User with id : ${id} not found`);
+    }
+
     return await this.userRepository.delete({ id });
   }
 
   public async getUserById(id: number) {
-    return await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: id },
       // relations: {
       //   profile: true,
       // },
     });
+
+    if (!user) {
+      throw new NotFoundException(`User with id : ${id} not found`);
+    }
+
+    return user;
   }
 }
