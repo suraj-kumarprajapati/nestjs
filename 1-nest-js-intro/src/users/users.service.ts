@@ -14,6 +14,11 @@ import { CreateUserDto } from './dtos/create-user.dto';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { ResourceAlreadyExistsException } from 'src/exceptions/resource-already-exists.exception';
+import { PaginationProvider } from 'src/common/pagination/pagination.provider';
+import { SelectQueryBuilder } from 'typeorm/browser';
+import { PaginationQueryDto } from 'src/common/pagination/pagination-query.dto';
+import { PaginatedResult } from 'src/common/pagination/paginated-result.interface';
+import { ResponseDto } from 'src/common/dtos/response.dto';
 
 @Injectable()
 export class UsersService {
@@ -25,18 +30,48 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
 
     private readonly configService: ConfigService,
+
+    private readonly paginationProvider: PaginationProvider,
   ) {}
 
-  public async getUsers(): Promise<User[]> {
+  public async getUsers(
+    paginationQueryDto: PaginationQueryDto,
+  ): Promise<ResponseDto<PaginatedResult<User>>> {
     const envType: string = this.configService.get<string>('ENV_TYPE') ?? '';
     console.log('Current environment type:', envType);
 
-    const users = await this.userRepository.find({
-      relations: {
-        profile: true,
-      },
+    // const users = await this.userRepository.find({
+    //   relations: {
+    //     profile: true,
+    //   },
+    // });
+    // return users;
+
+    const queryBuilder: SelectQueryBuilder<User> = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.profile', 'profile');
+    // .addSelect('user.password'); // include the password field in the query results
+
+    const columns: string[] =
+      queryBuilder.expressionMap.mainAlias!.metadata.columns.map(
+        (col) => col.propertyName,
+      );
+
+    const result = await this.paginationProvider.paginateQuery(
+      paginationQueryDto,
+      queryBuilder,
+      'user',
+      columns,
+    );
+
+    return new ResponseDto<PaginatedResult<User>>({
+      success: true,
+      statusCode: 200,
+      timestamp: new Date().toISOString(),
+      path: '',
+      message: 'Users retrieved successfully',
+      data: result,
     });
-    return users;
   }
 
   public async createUser(createUserDto: CreateUserDto) {

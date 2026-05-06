@@ -1,19 +1,23 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PaginationQueryDto } from './pagination-query.dto';
 import { ObjectLiteral } from 'typeorm';
 import { SelectQueryBuilder } from 'typeorm/browser';
 import { PaginatedResult } from './paginated-result.interface';
 import { OrderBy } from '../enums/order-by.enum';
+import { REQUEST } from '@nestjs/core';
+import type { Request } from 'express';
 
 @Injectable()
 export class PaginationProvider {
+  constructor(@Inject(REQUEST) private readonly request: Request) {}
+
   public async paginateQuery<T extends ObjectLiteral>(
     paginationQueryDto: PaginationQueryDto,
     queryBuilder: SelectQueryBuilder<T>,
     tableAlias?: string,
     columns: string[] = [],
   ): Promise<PaginatedResult<T>> {
-    const { sortedBy, orderBy } = paginationQueryDto;
+    const { page, limit, sortedBy, orderBy } = paginationQueryDto;
 
     // Apply sorting if sortedBy is provided
     if (sortedBy) {
@@ -27,6 +31,10 @@ export class PaginationProvider {
       const orderByColumn = tableAlias ? `${tableAlias}.${sortedBy}` : sortedBy;
       queryBuilder.orderBy(orderByColumn, orderBy || OrderBy.ASC);
     }
+
+    // apply pagination parameters
+    queryBuilder.skip((page - 1) * limit);
+    queryBuilder.take(limit);
 
     const result: PaginatedResult<T> = await this.extractDataFromQueryBuilder(
       queryBuilder,
@@ -48,6 +56,7 @@ export class PaginationProvider {
 
     const lastPage = Math.ceil(total / limit);
     const firstPage = 1;
+    const baseUrl = `${this.request.protocol}://${this.request.get('host')}${this.request.path}`;
 
     const result: PaginatedResult<T> = {
       data: data,
@@ -58,11 +67,13 @@ export class PaginationProvider {
         currentPage: page,
       },
       links: {
-        first: `?page=${firstPage}&limit=${limit}`,
-        last: `?page=${lastPage}&limit=${limit}`,
-        current: `?page=${page}&limit=${limit}`,
-        next: page < lastPage ? `?page=${page + 1}&limit=${limit}` : null,
-        previous: page > 1 ? `?page=${page - 1}&limit=${limit}` : null,
+        first: `${baseUrl}?page=${firstPage}&limit=${limit}`,
+        last: `${baseUrl}?page=${lastPage}&limit=${limit}`,
+        current: `${baseUrl}?page=${page}&limit=${limit}`,
+        next:
+          page < lastPage ? `${baseUrl}?page=${page + 1}&limit=${limit}` : null,
+        previous:
+          page > 1 ? `${baseUrl}?page=${page - 1}&limit=${limit}` : null,
       },
     };
     return result;

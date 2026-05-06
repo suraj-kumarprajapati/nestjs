@@ -9,6 +9,7 @@ import { HashTag } from 'src/hashtag/hashtag.entity';
 import { UpdateTweetDto } from './dtos/update-tweet.dto';
 import { PaginationQueryDto } from 'src/common/pagination/pagination-query.dto';
 import { PaginationProvider } from 'src/common/pagination/pagination.provider';
+import { PaginatedResult } from 'src/common/pagination/paginated-result.interface';
 
 @Injectable()
 export class TweetsService {
@@ -23,26 +24,12 @@ export class TweetsService {
   public async getTweetsByUserId(
     userId: number,
     paginationQueryDto: PaginationQueryDto,
-  ) {
+  ): Promise<PaginatedResult<Tweet>> {
     const user = await this.usersService.getUserById(userId);
 
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
-
-    // return await this.tweetsRepository.find({
-    //   where: {
-    //     user: {
-    //       id: userId,
-    //     },
-    //   },
-    //   relations: {
-    //     user: true,
-    //     hashTags: true,
-    //   },
-    //   skip: (paginationQueryDto.page - 1) * paginationQueryDto.limit,
-    //   take: paginationQueryDto.limit,
-    // });
 
     const queryBuilder = this.tweetsRepository
       .createQueryBuilder('tweet')
@@ -56,22 +43,25 @@ export class TweetsService {
         (col) => col.propertyName,
       );
 
-    const result = await this.paginationProvider.paginateQuery(
-      paginationQueryDto,
-      queryBuilder,
-      'tweet',
-      columns,
-    );
+    const result: PaginatedResult<Tweet> =
+      await this.paginationProvider.paginateQuery(
+        paginationQueryDto,
+        queryBuilder,
+        'tweet',
+        columns,
+      );
 
     return result;
   }
 
   // create a new tweet
-  public async createTweet(createTweetDto: CreateTweetDto) {
+  public async createTweet(createTweetDto: CreateTweetDto): Promise<Tweet> {
     const user = await this.usersService.getUserById(createTweetDto.userId);
 
     if (!user) {
-      return 'User not found';
+      throw new NotFoundException(
+        `User with ID ${createTweetDto.userId} not found`,
+      );
     }
 
     const hashTags: HashTag[] = await this.hashTagService.getHashTags(
@@ -88,13 +78,16 @@ export class TweetsService {
     return await this.tweetsRepository.save(newTweet);
   }
 
-  public async updateTweet(id: number, updateTweetDto: UpdateTweetDto) {
+  public async updateTweet(
+    id: number,
+    updateTweetDto: UpdateTweetDto,
+  ): Promise<Tweet> {
     const existingTweet = await this.tweetsRepository.findOne({
       where: { id },
     });
 
     if (!existingTweet) {
-      return 'Tweet not found';
+      throw new NotFoundException('Tweet not found');
     }
 
     const newHashTags: HashTag[] = await this.hashTagService.getHashTags(
@@ -109,6 +102,14 @@ export class TweetsService {
   }
 
   public async deleteTweet(id: number) {
-    return await this.tweetsRepository.delete({ id });
+    const existingTweet = await this.tweetsRepository.findOne({
+      where: { id },
+    });
+
+    if (!existingTweet) {
+      throw new NotFoundException('Tweet not found');
+    }
+
+    return await this.tweetsRepository.remove(existingTweet);
   }
 }
