@@ -12,6 +12,9 @@ async function bootstrap() {
       whitelist: true, // it will ignore any properties that are not defined in the DTO
       forbidNonWhitelisted: true, // it will throw an error if there are any properties that are not defined in the DTO
       transform: true, // it will automatically transform the payload to the DTO class instance
+      transformOptions: {
+        enableImplicitConversion: true, // it will allow implicit type conversion (e.g., string to number)
+      },
     }),
   );
 

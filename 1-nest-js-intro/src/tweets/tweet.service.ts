@@ -7,6 +7,8 @@ import { CreateTweetDto } from './dtos/create-tweet.dto';
 import { HashTagService } from 'src/hashtag/hashtag.service';
 import { HashTag } from 'src/hashtag/hashtag.entity';
 import { UpdateTweetDto } from './dtos/update-tweet.dto';
+import { PaginationQueryDto } from 'src/common/pagination/pagination-query.dto';
+import { PaginationProvider } from 'src/common/pagination/pagination.provider';
 
 @Injectable()
 export class TweetsService {
@@ -15,26 +17,53 @@ export class TweetsService {
     private readonly hashTagService: HashTagService,
     @InjectRepository(Tweet)
     private readonly tweetsRepository: Repository<Tweet>,
+    private readonly paginationProvider: PaginationProvider,
   ) {}
 
-  public async getTweetsByUserId(userId: number) {
+  public async getTweetsByUserId(
+    userId: number,
+    paginationQueryDto: PaginationQueryDto,
+  ) {
     const user = await this.usersService.getUserById(userId);
 
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    return await this.tweetsRepository.find({
-      where: {
-        user: {
-          id: userId,
-        },
-      },
-      relations: {
-        // user: true,
-        hashTags: true,
-      },
-    });
+    // return await this.tweetsRepository.find({
+    //   where: {
+    //     user: {
+    //       id: userId,
+    //     },
+    //   },
+    //   relations: {
+    //     user: true,
+    //     hashTags: true,
+    //   },
+    //   skip: (paginationQueryDto.page - 1) * paginationQueryDto.limit,
+    //   take: paginationQueryDto.limit,
+    // });
+
+    const queryBuilder = this.tweetsRepository
+      .createQueryBuilder('tweet')
+      .leftJoinAndSelect('tweet.user', 'user')
+      .leftJoinAndSelect('tweet.hashTags', 'hashTags')
+      .where('user.id = :userId', { userId: userId });
+    // .addSelect('user.password');
+
+    const columns: string[] =
+      queryBuilder.expressionMap.mainAlias!.metadata.columns.map(
+        (col) => col.propertyName,
+      );
+
+    const result = await this.paginationProvider.paginateQuery(
+      paginationQueryDto,
+      queryBuilder,
+      'tweet',
+      columns,
+    );
+
+    return result;
   }
 
   // create a new tweet
@@ -82,4 +111,4 @@ export class TweetsService {
   public async deleteTweet(id: number) {
     return await this.tweetsRepository.delete({ id });
   }
-} 
+}

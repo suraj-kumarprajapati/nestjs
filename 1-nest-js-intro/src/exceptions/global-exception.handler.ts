@@ -36,9 +36,7 @@ export class GlobalExceptionHandler implements ExceptionFilter {
         const res = exceptionResponse as { message?: string | string[] };
         message = res.message ?? message;
       }
-    }
-
-    if (exception instanceof QueryFailedError) {
+    } else if (exception instanceof QueryFailedError) {
       status = HttpStatus.BAD_REQUEST;
 
       const err = exception as QueryFailedError & {

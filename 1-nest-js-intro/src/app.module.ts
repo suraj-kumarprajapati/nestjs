@@ -9,6 +9,7 @@ import { ProfileModule } from './profile/profile.module';
 import { HashTagModule } from './hashtag/hashtag.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { appConfig } from './config/app.config';
+import { PaginationModule } from './common/pagination/pagination.module';
 
 const ENV = process.env.ENV_MODE;
 
@@ -35,6 +36,7 @@ console.log('Using environment file:', envPath);
     AuthModule,
     ProfileModule,
     HashTagModule,
+    PaginationModule,
 
     // async configuration for TypeORM
     TypeOrmModule.forRootAsync({
