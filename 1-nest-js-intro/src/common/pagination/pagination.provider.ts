@@ -31,6 +31,8 @@ export class PaginationProvider {
       const orderByColumn = tableAlias ? `${tableAlias}.${sortedBy}` : sortedBy;
       queryBuilder.orderBy(orderByColumn, orderBy || OrderBy.ASC);
     }
+   
+
 
     // apply pagination parameters
     queryBuilder.skip((page - 1) * limit);
